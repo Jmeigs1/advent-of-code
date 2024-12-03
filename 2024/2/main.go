@@ -28,7 +28,6 @@ func parseToInts(s string) []int {
 		}
 
 		ret = append(ret, num)
-
 	}
 
 	return ret
@@ -42,14 +41,12 @@ func main() {
 	defer file.Close()
 
 	inputData := [][]int{}
-	i := 0
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 		lineArray := parseToInts(line)
 		inputData = append(inputData, lineArray)
-		i++
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -68,7 +65,6 @@ func part1(inputData [][]int) {
 		base := a[1] - a[0]
 
 		if base == 0 {
-			// Not safe
 			continue
 		}
 
@@ -109,8 +105,8 @@ func part2(inputData [][]int) {
 		}
 	}
 	fmt.Println("Part2:", count)
-	fmt.Println("Part2 no removed:", count2)
-	fmt.Println("Part2 removed:", count3)
+	fmt.Println("Part2 no recheck:", count2)
+	fmt.Println("Part2 with 1 removed:", count3)
 }
 
 func debugRow(a []int, j int) bool {
