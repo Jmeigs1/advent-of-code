@@ -17,19 +17,11 @@ func Abs[T constraints.Integer](x T) T {
 	return x
 }
 
-func processLine(s string) []int {
-	parts := strings.Split(s, " ")
-	realParts := []string{}
+func parseToInts(s string) []int {
+	parts := strings.Fields(s)
 	ret := []int{}
 
 	for _, p := range parts {
-		if p == "" {
-			continue
-		}
-		realParts = append(realParts, p)
-	}
-
-	for _, p := range realParts {
 		num, err := strconv.Atoi(p)
 		if err != nil {
 			panic(err)
@@ -55,7 +47,7 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		lineArray := processLine(line)
+		lineArray := parseToInts(line)
 		inputData = append(inputData, lineArray)
 		i++
 	}
