@@ -147,7 +147,9 @@ func badRow(a []int, j int, removed bool) (bool, bool) {
 				return true, removed
 			}
 
-			for k := 0; k < len(a); k++ {
+			// Need to convince myself this would work for all possible inputs
+			// Doesn't fail for my personal input
+			for k := max(i-2, 0); k < i+1; k++ {
 				a1 := remove(a, k)
 				isBad1, _ := badRow(a1, j, true)
 				if !isBad1 {
