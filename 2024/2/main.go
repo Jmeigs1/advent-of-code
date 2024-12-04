@@ -31,9 +31,13 @@ func parseToInts(s string) []int {
 	}
 
 	return ret
-}
+} // adjust the capacity to your need (max characters in line)
 
 func main() {
+	// 10 Mb capacity for line buffer
+	const maxCapacity = 10 * 1024 * 1024
+	buf := make([]byte, maxCapacity)
+
 	file, err := os.Open("input.txt")
 	if err != nil {
 		panic(err)
@@ -43,6 +47,8 @@ func main() {
 	inputData := [][]int{}
 
 	scanner := bufio.NewScanner(file)
+	scanner.Buffer(buf, maxCapacity)
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		lineArray := parseToInts(line)
@@ -143,10 +149,11 @@ func badRow(a []int, j int, removed bool) (bool, bool) {
 				return true, removed
 			}
 
-			// Need to convince myself this would work for all possible inputs
-			// Doesn't fail for my personal input
-			for k := max(i-2, 0); k < i+1; k++ {
-				a1 := remove(a, k)
+			start := max(i-2, 0)
+			start2 := max(start-1, 0)
+
+			for k := start; k < i+1; k++ {
+				a1 := remove(a[start2:], k-start2)
 				isBad1, _ := badRow(a1, j, true)
 				if !isBad1 {
 					return false, true
