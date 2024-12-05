@@ -1,6 +1,7 @@
 import scala.io.Source
 import scala.io.BufferedSource
 import scala.collection.mutable.Queue
+import scala.util.chaining._
 
 var myRegex = raw"mul\((\d{1,3}),(\d{1,3})\)".r
 
@@ -27,8 +28,11 @@ def part2() = {
   var count = 0
   var data = ""
   val source = Source.fromFile("input.txt")
-  // This is ugly :(
-  multParser(doDontParser(source)).foreach(d => count += d)
+  source pipe
+    doDontParser pipe
+    multParser pipe
+    (iter => iter.foreach(d => count += d))
+
   println(count)
   source.close()
 }
