@@ -34,7 +34,11 @@ def evaluateLine(final: int, nums: list[int]):
         return final == nums[0]
 
     for func in funcs:
-        ev = evaluateLine(final, [func(nums[0], nums[1])] + nums[2:])
+        newNumber = func(nums[0], nums[1])
+        if newNumber > final:
+            continue
+
+        ev = evaluateLine(final, [newNumber] + nums[2:])
         if ev:
             return True
     return False
