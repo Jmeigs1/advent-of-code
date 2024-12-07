@@ -31,17 +31,22 @@ funcs = [add, mult, concat]
 
 def evaluateLine(final: int, nums: list[int]):
     workingList = [nums]
-    expectedSize = len(funcs) ** (len(nums) - 1)
 
     while True:
-        if len(workingList) == expectedSize:
+        if len(workingList) == 0:
+            return False
+        # This works because all lists should be the same size
+        if len(workingList[0]) == 1:
             return any(list(map(lambda x: x[0] == final, workingList)))
         else:
             newList = []
             for item in workingList:
                 for func in funcs:
                     newNumber = func(item[0], item[1])
-                    newList.append([newNumber] + item[2:])
+                    if newNumber > final:
+                        continue
+                    else:
+                        newList.append([newNumber] + item[2:])
             workingList = newList
 
 
