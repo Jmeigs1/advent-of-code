@@ -2,13 +2,9 @@ let default = "input.txt" in
 let file = if Array.length Sys.argv == 2 then Sys.argv.(1) else default in
 let ic = open_in file in
 
-let _test = Str.regexp in
-
 let s = really_input_string ic (in_channel_length ic) in
 
-let split_on_whitespace s =
-  s |> String.split_on_char ' ' |> List.filter (fun s -> String.length s != 0)
-in
+let split_on_whitespace s = s |> Str.split (Str.regexp "[ ]+") in
 
 let lists =
   s |> String.trim |> String.split_on_char '\n' |> List.map split_on_whitespace
