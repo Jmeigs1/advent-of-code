@@ -4,7 +4,7 @@ LIBS = +str str.cma
 
 run: all
 	./part1.out
-	#./part2.out
+	./part2.out
 
 all: part1 part2
 
