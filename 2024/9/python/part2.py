@@ -31,9 +31,12 @@ def doOdd(line, i, shifts, depth):
     return count
 
 
-def getShift(line, i, shifts, sizes):
+def getShift(line, i, shifts, sizes, full):
     j = 1
     while j < i:
+        if j in full:
+            j += 2
+            continue
         if j in shifts:
             size = sizes[j]
             if line[j] >= size + line[i]:
@@ -49,15 +52,18 @@ def getShift(line, i, shifts, sizes):
 def buildShifts(line):
     shifts = defaultdict(list)
     sizes = defaultdict(int)
+    full = set()
     ignore = set()
 
     i = len(line) - 1
     while not i < 0:
-        shift = getShift(line, i, shifts, sizes)
+        shift = getShift(line, i, shifts, sizes, full)
         if shift is not None:
             si, sj = shift
             shifts[sj].append(si)
             sizes[sj] += line[si]
+            if sizes[sj] == line[sj]:
+                full.add(sj)
             ignore.add(si)
         i -= 2
     return shifts, ignore
