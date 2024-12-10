@@ -1,6 +1,5 @@
 let _split_on_whitespace s = s |> Str.split (Str.regexp "[ ]+")
 let toList s = List.init (String.length s) (fun i -> String.sub s i 1)
-let rec dup i j arr = if not (i > 0) then arr else dup (i - 1) j (j :: arr)
 
 let _debugLst lst =
   lst
@@ -8,30 +7,47 @@ let _debugLst lst =
          print_int x;
          print_string " ")
 
+let doForRange i j fn =
+  let rec loopFn i =
+    if not (i < j) then ()
+    else
+      let () = fn i in
+      loopFn (i + 1)
+  in
+  loopFn i
+
 let buildWorkArray lst =
   let open List in
-  let rec loopFn i arr =
-    if not (i < length lst) then arr
-    else
-      let value = if i mod 2 == 0 then i / 2 else -1 in
-      let newArr = arr @ dup (nth lst i) value [] in
-      loopFn (i + 1) newArr
-  in
-  loopFn 0 []
+  let size = lst |> fold_left ( + ) 0 in
+  let workArr = Array.init size (fun _ -> -1) in
 
-let processWorkingArray lst =
-  let open List in
+  let rec buildWorkArray inIdx outIdx lstin arrout =
+    if length lstin == 0 then arrout
+    else
+      let h, rest =
+        match lstin with
+        | [] -> failwith "This shouldnt happen"
+        | [ x ] -> (x, [])
+        | h :: rest -> (h, rest)
+      in
+      let value = if inIdx mod 2 == 0 then Int.shift_right inIdx 1 else -1 in
+      let () = doForRange outIdx (outIdx + h) (fun x -> arrout.(x) <- value) in
+      buildWorkArray (inIdx + 1) (outIdx + h) rest arrout
+  in
+  buildWorkArray 0 0 lst workArr
+
+let processWorkingArray arr =
   let rec loopFn i j count =
     if i > j then count
-    else if nth lst i == -1 then
-      if nth lst j == -1 then loopFn i (j - 1) count
-      else loopFn (i + 1) (j - 1) (count + (nth lst j * i))
-    else loopFn (i + 1) j (count + (nth lst i * i))
+    else if arr.(i) == -1 then
+      if arr.(j) == -1 then loopFn i (j - 1) count
+      else loopFn (i + 1) (j - 1) (count + (arr.(j) * i))
+    else loopFn (i + 1) j (count + (arr.(i) * i))
   in
-  loopFn 0 (length lst - 1) 0
+  loopFn 0 (Array.length arr - 1) 0
 
 let () =
-  let default = "input2.txt" in
+  let default = "input.txt" in
   let file = if Array.length Sys.argv == 2 then Sys.argv.(1) else default in
   let ic = open_in file in
 
@@ -40,6 +56,6 @@ let () =
 
   let working = blocks |> buildWorkArray in
 
+  (* working |> List.length |> string_of_int |> print_endline; *)
   working |> processWorkingArray |> string_of_int |> print_endline;
-
   close_in ic
