@@ -21,20 +21,20 @@ let buildWorkArray lst =
   let size = lst |> fold_left ( + ) 0 in
   let workArr = Array.init size (fun _ -> -1) in
 
-  let rec buildWorkArray inIdx outIdx lstin arrout =
-    if length lstin == 0 then arrout
+  let rec buildWorkArray inIdx outIdx lstin =
+    if length lstin == 0 then workArr
     else
-      let h, rest =
+      let h, h2, rest =
         match lstin with
         | [] -> failwith "This shouldnt happen"
-        | [ x ] -> (x, [])
-        | h :: rest -> (h, rest)
+        | h :: h2 :: rest -> (h, h2, rest)
+        | h :: rest -> (h, 0, rest)
       in
-      let value = if inIdx mod 2 == 0 then Int.shift_right inIdx 1 else -1 in
-      let () = doForRange outIdx (outIdx + h) (fun x -> arrout.(x) <- value) in
-      buildWorkArray (inIdx + 1) (outIdx + h) rest arrout
+      let value = Int.shift_right inIdx 1 in
+      let () = doForRange outIdx (outIdx + h) (fun x -> workArr.(x) <- value) in
+      buildWorkArray (inIdx + 2) (outIdx + h + h2) rest
   in
-  buildWorkArray 0 0 lst workArr
+  buildWorkArray 0 0 lst
 
 let processWorkingArray arr =
   let rec loopFn i j count =
