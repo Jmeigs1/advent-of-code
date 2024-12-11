@@ -1,5 +1,7 @@
 let _split_on_whitespace s = s |> Str.split (Str.regexp "[ ]+")
-let toList s = List.init (String.length s) (fun i -> String.sub s i 1)
+
+let toList s =
+  List.init (String.length s) (fun i -> String.sub s i 1 |> int_of_string)
 
 let _debugLst lst =
   lst
@@ -19,7 +21,7 @@ let doForRange i j fn =
 let buildWorkArray lst =
   let open List in
   let size = lst |> fold_left ( + ) 0 in
-  let workArr = Array.init size (fun _ -> -1) in
+  let workArr = Array.init size (fun _ -> 0) in
 
   let rec buildWorkArray inIdx outIdx lstin =
     if length lstin == 0 then workArr
@@ -39,8 +41,8 @@ let buildWorkArray lst =
 let processWorkingArray arr =
   let rec loopFn i j count =
     if i > j then count
-    else if arr.(i) == -1 then
-      if arr.(j) == -1 then loopFn i (j - 1) count
+    else if arr.(i) == 0 then
+      if arr.(j) == 0 then loopFn i (j - 1) count
       else loopFn (i + 1) (j - 1) (count + (arr.(j) * i))
     else loopFn (i + 1) j (count + (arr.(i) * i))
   in
@@ -52,10 +54,9 @@ let () =
   let ic = open_in file in
 
   let s = really_input_string ic (in_channel_length ic) in
-  let blocks = s |> String.trim |> toList |> List.map int_of_string in
+  let blocks = s |> String.trim |> toList in
 
   let working = blocks |> buildWorkArray in
 
-  (* working |> List.length |> string_of_int |> print_endline; *)
   working |> processWorkingArray |> string_of_int |> print_endline;
   close_in ic
