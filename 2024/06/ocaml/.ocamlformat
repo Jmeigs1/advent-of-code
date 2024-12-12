@@ -1,0 +1,15 @@
+profile = default 
+margin = 80
+
+wrap-comments = true
+match-indent = 2
+
+space-around-arrays = true
+space-around-lists = true
+space-around-records = true
+space-around-variants = true
+
+
+# To make ocaml-ci happy
+version = ignore
+version-check = false
