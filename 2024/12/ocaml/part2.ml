@@ -10,11 +10,14 @@ module CellSet = Set.Make (struct
     | i, j, h, k -> i - h
 end)
 
+module CellMap = Map.Make (String)
+
 let printCell (i, j) = Printf.printf "%d:%d\n" i j
 let printCell2 (i, j) = Printf.printf "%d:%d " i j
 
 let addExplore (ap, aa, aseen, aboard) (bp, ba, bseen, bboard) =
-  (ap + bp, aa + ba, CellSet.union aseen bseen, CellSet.union aboard bboard)
+  let pick key v1 v2 = Some (Int.max v1 v2) in
+  (ap + bp, aa + ba, CellSet.union aseen bseen, CellMap.union pick aboard bboard)
 
 let isInBounds ibound jbound cell =
   let i, j = cell in
@@ -29,16 +32,19 @@ let getAdj start : cell list =
   in
   dirs |> List.map (add start)
 
+let tupToString (i, j) = Printf.sprintf "%d:%d" i j
+
 let exploreRegion gd start =
-  let si, sj = start in
-  let startVal = gd.(si).[sj] in
+  let fromGrid (i, j) = gd.(i).[j] in
+  let startVal = fromGrid start in
+  let isStartVal (i, j) = gd.(i).[j] == startVal in
 
   let ibound = Array.length gd in
   let jbound = String.length gd.(0) in
   let isInBounds = isInBounds ibound jbound in
 
   let seen = CellSet.empty in
-  let borders = CellSet.empty in
+  let borders = CellMap.empty in
 
   let rec explore seen borders current =
     let newA = 1 in
@@ -54,28 +60,80 @@ let exploreRegion gd start =
       adj
       |> List.filter (fun ((i, j) as x) ->
              (not (isInBounds x)) || gd.(i).[j] != startVal)
-      |> List.filter (fun (i, j) ->
-             let ci, cj = current in
-             let di = (i - ci) * i in
-             let dj = (j - cj) * j in
-             (* Printf.printf "%d:%d " di dj; *)
-             not (CellSet.mem (di, dj) borders))
+    in
+
+    let invalidAdjBorderSeen =
+      invalidAdj |> List.filter (fun x -> CellMap.mem (tupToString x) borders)
     in
 
     let newBorders =
-      invalidAdj
+      invalidAdj |> List.filter isInBounds
       |> List.fold_left
-           (fun b (i, j) ->
-             let ci, cj = current in
-             let di = (i - ci) * i in
-             let dj = (j - cj) * j in
-
-             CellSet.add (di, dj) b)
+           (fun b ((i, j) as x) ->
+             CellMap.update (tupToString x)
+               (fun v -> match v with None -> Some 1 | Some v -> Some (v + 1))
+               b)
            borders
     in
 
-    let newP = List.length invalidAdj in
+    let rec remove_dups lst =
+      match lst with
+      | [] -> []
+      | ((i, j) as h) :: t ->
+          h
+          :: remove_dups
+               (List.filter (fun (xi, xj) -> not (xi == i || xj == j)) t)
+    in
 
+    let externalAngles =
+      match List.length invalidAdj with
+      | 4 -> 4
+      | 3 -> 2
+      | 2 -> List.length (invalidAdj |> remove_dups) - 1
+      | 1 -> 0
+      | 0 -> 0
+      | _ -> failwith "bad ex angles"
+    in
+
+    let findInternalAngles (i, j) =
+      let baseCorner = [ (1, 0); (1, 1); (0, 1) ] in
+      let dirs = [ (1, 1); (1, -1); (-1, 1); (-1, -1) ] in
+
+      let combos =
+        dirs
+        |> List.map (fun (di, dj) ->
+               List.map (fun (bi, bj) -> (di * bi, dj * bj)) baseCorner)
+      in
+
+      let v =
+        combos
+        |> List.filter
+             (List.for_all (fun (ti, tj) ->
+                  let v = (i + ti, j + tj) in
+                  isInBounds v && isStartVal v))
+        |> List.length
+      in
+      v
+    in
+
+    let internalAngles =
+      invalidAdjBorderSeen
+      |> List.map (fun v ->
+             let vl = CellMap.find (tupToString v) borders in
+             match vl with
+             | 3 -> 0
+             | 2 -> 0
+             | 1 -> findInternalAngles v
+             | x ->
+                 failwith
+                   (Printf.sprintf "bad in angle %c %d current:%s looking:%s"
+                      startVal x (tupToString current) (tupToString v)))
+      |> List.fold_left ( + ) 0
+    in
+
+    let newP = externalAngles + internalAngles in
+
+    (* Printf.printf "newp %d\n" newP; *)
     (* Printf.printf "%d - %d\n" newP newA; *)
     let validAdjUnseen =
       validAdj |> List.filter (fun x -> not (CellSet.mem x seen))
@@ -98,8 +156,6 @@ let exploreRegion gd start =
   in
 
   let p, a, seen, borders = explore seen borders start in
-  (* let () = CellSet.iter (fun (i, j) -> Printf.printf "%d|%d\n" i j) borders
-     in *)
   (p, a, seen)
 
 let exploreGrid gd =
@@ -121,7 +177,7 @@ let exploreGrid gd =
   explore 0 0 0 seen
 
 let () =
-  let default = "input2.txt" in
+  let default = "input.txt" in
   let file = if Array.length Sys.argv == 2 then Sys.argv.(1) else default in
   let ic = open_in file in
 
