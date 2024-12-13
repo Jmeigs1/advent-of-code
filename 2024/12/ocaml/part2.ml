@@ -95,6 +95,8 @@ let exploreRegion gd start =
       | _ -> failwith "bad ex angles"
     in
 
+    (* there is a nasty bug here. Can over count if groups with same letter are
+       too close - See bad-input *)
     let findInternalAngles (i, j) =
       let baseCorner = [ (1, 0); (1, 1); (0, 1) ] in
       let dirs = [ (1, 1); (1, -1); (-1, 1); (-1, -1) ] in
