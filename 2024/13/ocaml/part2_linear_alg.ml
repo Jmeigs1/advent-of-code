@@ -31,21 +31,24 @@ let col_results opt_a opt_b =
 let win_prizes ((a1, a2) as a) ((b1, b2) as b) ((t1, t2) as t) =
   let t1 = big_ol_num + t1 in
   let t2 = big_ol_num + t2 in
-  let d1 = (t2 * b1) - (t1 * b2) in
-  let d2 = (a2 * b1) - (b2 * a1) in
 
-  let a = d1 / d2 in
-  let rem = Int.abs d1 % Int.abs d2 in
-  let b = (t1 - (a1 * a)) / b1 in
-  let cost = (a * 3) + b in
+  let n = (t1 * b2) - (t2 * b1) in
+  let det = (a1 * b2) - (a2 * b1) in
 
-  printf "a: %d\n" a;
-  printf "b: %d\n" b;
-  printf "rem: %d\n" rem;
-  printf "cost: %d\n" cost;
-  printf "\n";
+  if Int.equal det 0 then None
+  else
+    let a = n / det in
+    let rem = Int.abs n % Int.abs det in
+    let b = (t1 - (a1 * a)) / b1 in
+    let cost = (a * 3) + b in
 
-  if Int.equal rem 0 then Some cost else None
+    printf "a: %d\n" a;
+    printf "b: %d\n" b;
+    printf "rem: %d\n" rem;
+    printf "cost: %d\n" cost;
+    printf "\n";
+
+    if Int.equal rem 0 then Some cost else None
 
 let parse_line line =
   let re =
