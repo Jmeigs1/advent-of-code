@@ -76,16 +76,30 @@ let print_grid i lst =
     | _ -> failwith "bad add_pints"
   in
 
-  let rec printLoop n =
+  let clustered_rexp = Re.str "++++++++" |> Re.compile in
+
+  let found = ref false in
+
+  let rec check_loop n =
+    if Int.equal n (Array.length arr) then ()
+    else
+      let f = Re.exec_opt clustered_rexp arr.(n) in
+      if Option.is_some f then found := true else check_loop (n + 1)
+  in
+
+  let rec print_loop n =
     if Int.equal n (Array.length arr) then ()
     else
       let () = printf "%s\n" arr.(n) in
-      printLoop (n + 1)
+      print_loop (n + 1)
   in
 
-  let () = printf "Grid at iter: %d\n" i in
   add_points lst;
-  printLoop 0
+  check_loop 0;
+  if !found then
+    let () = printf "Grid at iter: %d\n" i in
+    print_loop 0
+  else ()
 
 let rec loop start fin lst =
   if Int.equal start fin then ()
@@ -93,9 +107,6 @@ let rec loop start fin lst =
     let () = lst |> List.map ~f:(project start) |> print_grid start in
     let () = loop (start + 1) fin lst in
     ()
-
-(* This will generate ~51 Mb text files when piped - Then used grep *)
-let step = 5
 
 let () =
   let default = "input.txt" in
@@ -107,4 +118,4 @@ let () =
 
   let lst = lines |> List.map ~f:build_start in
 
-  lst |> loop (5000 * step) (5000 * (step + 1))
+  lst |> loop 0 10_000
