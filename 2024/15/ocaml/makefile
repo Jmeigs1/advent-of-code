@@ -5,8 +5,8 @@ OBJS=$(SRCS:.c=.out)
 
 .SILENT:
 run: all
-	./part1.out
-	# ./part2.out
+	# ./part1.out
+	./part2.out
 
 all: part1 part2
 
