@@ -1,0 +1,28 @@
+Register A: 62769524
+Register B: 0
+Register C: 0
+
+Program: 
+2,4,1,7,7,5,0,3,4,0,1,7,5,5,3,0
+1,4,3,0,2,0,0,0,0,0,0,0,0,2,0,4
+
+24
+rb = ra % 8
+17
+rb = rb lxor 7
+75
+rc = ra >> rb
+03
+ra = ra / 8
+40
+rb = rb lxor rc
+17
+rb = rb lxor 7
+55
+print rb % 8
+30
+end if ra = 0
+
+while ra > 0 {
+
+}
