@@ -4,6 +4,11 @@ open Re
 let split_to_parts s = s |> Str.split (Str.regexp "\n\n")
 let get_nums = Re.(alt [ rg '0' '9' ] |> rep1 |> compile)
 
+let base_8_to_10 s =
+  s |> String.to_list
+  |> List.map ~f:(fun c -> sprintf "%c" c |> Int.of_string)
+  |> List.fold_left ~init:0 ~f:(fun a i -> (a * 8) + i)
+
 (* --- *)
 let get_combo combo ra rb rc =
   match combo with
@@ -40,7 +45,7 @@ let do_instruction opcode combo start ra rb rc result =
     | 5 ->
         let combo_val = get_combo combo ra rb rc in
         let print_val = sprintf "%d" (combo_val % 8) in
-        (start + 2, ra, rb, rc, print_val :: result)
+        (start + 2, ra, rb, rc, result ^ print_val)
     | 6 ->
         let combo_val = get_combo combo ra rb rc in
         let new_rb = ra / Int.pow 2 combo_val in
@@ -51,34 +56,52 @@ let do_instruction opcode combo start ra rb rc result =
         (start + 2, ra, rb, new_rc, result)
     | _ -> failwith "bad opcode"
 
-let rec join separator = function
-  | [] -> ""
-  | [ str ] -> str
-  | "" :: strs -> join separator strs
-  | str :: strs -> str ^ separator ^ join separator strs
-
-let loop_instructions inst ra rb rc expected =
+let loop_instructions inst ra rb rc =
   let size = Array.length inst in
   let rec loop (i, ra, rb, rc, result) =
-    let test_str = List.rev result |> join "," in
-
-    if String.equal test_str expected then Some test_str
-    else if not (i + 1 < size) then
-      let () = printf "%s\n%!" expected in
-      let () = printf "%s\n%!" test_str in
-      None
+    if not (i + 1 < size) then result
     else loop (do_instruction inst.(i) inst.(i + 1) i ra rb rc result)
   in
-  loop (0, ra, rb, rc, [])
+  loop (0, ra, rb, rc, "")
 
-let rec find_input ra inst rb rc expected =
-  if ra % 10000 = 0 then printf "count: %d\n%!" ra else ();
-  let res = loop_instructions inst ra rb rc expected in
-  if Option.is_some res then (ra, Option.value_exn res)
-  else
-    (* -- *)
-    (* find_input (ra + 1) inst rb rc expected *)
-    failwith "asdf"
+let find_input inst expected =
+  let rb = 0 in
+  let rc = 0 in
+
+  let rec do_digit start expected_next n candidates =
+    if n = 8 then candidates
+    else
+      let next_start = sprintf "%s%d" start n in
+      let ra = base_8_to_10 next_start in
+      let res = loop_instructions inst ra rb rc in
+      (* printf "res: %s expected: %c\n" res expected_next; *)
+      let n_candidates =
+        if Char.equal res.[0] expected_next then next_start :: candidates
+        else candidates
+      in
+      do_digit start expected_next (n + 1) n_candidates
+  in
+
+  let rec find i candidates =
+    if i < 0 then
+      match candidates with
+        | h :: tail ->
+            List.fold_left tail ~init:(base_8_to_10 h) ~f:(fun a v ->
+                Int.min a (base_8_to_10 v))
+        | [] -> failwith "found no end. something went wrong"
+    else
+      let nxt_char = expected.[i] in
+      let new_candidats =
+        candidates
+        |> List.map ~f:(fun c -> (* printf "%s\n" c; *)
+                                 do_digit c nxt_char 0 [])
+        |> Stdlib.List.flatten
+      in
+      (* printf "c len %d\n" (List.length new_candidats); *)
+      find (i - 1) new_candidats
+  in
+
+  find (String.length expected - 1) [ "" ]
 
 let () =
   let default = "input.txt" in
@@ -87,17 +110,10 @@ let () =
 
   let s = In_channel.read_all file in
   let parts = s |> split_to_parts in
-  let p1, p2 =
+  let _, p2 =
     match parts with
       | [ p1; p2 ] -> (p1, p2)
       | _ -> failwith "bad part split"
-  in
-
-  let registers = Re.matches get_nums p1 |> List.map ~f:Int.of_string in
-  let ra, rb, rc =
-    match registers with
-      | [ ra; rb; rc ] -> (ra, rb, rc)
-      | _ -> failwith "bad register split"
   in
 
   let p2_matches = Re.matches get_nums p2 in
@@ -106,12 +122,8 @@ let () =
     Re.matches get_nums p2 |> List.map ~f:Int.of_string |> Array.of_list
   in
 
-  let expected_output = p2_matches |> join "," in
+  let expected_output = p2_matches |> List.fold_left ~init:"" ~f:( ^ ) in
 
-  (* --- I know the answer is between 2**45 and 2**48 not sure how to do
-     better--- *)
-  let found_ra, _ =
-    find_input (Int.pow 2 45) instructions rb rc expected_output
-  in
+  let found_ra = find_input instructions expected_output in
   printf "%d\n" found_ra;
   ()
