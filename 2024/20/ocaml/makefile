@@ -5,15 +5,15 @@ SRCS=$(wildcard libs/*.ml)
 .SILENT:
 run: all
 	./part1.out
-	# ./part2.out
+	./part2.out
 
 all: part1.out part2.out
 
-part1.out: part1.ml
-	ocamlfind ocamlopt -linkpkg -package $(LIBS) -o $@ -I libs $(SRCS) $^
+part1.out: $(SRCS) part1.ml
+	ocamlfind ocamlopt -linkpkg -package $(LIBS) -o $@ -I libs $^
 
-part2.out: part2.ml
-	ocamlfind ocamlopt -linkpkg -package $(LIBS) -o $@ $^
+part2.out: $(SRCS) part2.ml
+	ocamlfind ocamlopt -linkpkg -package $(LIBS) -o $@ -I libs $^
 
 clean:
 	rm -f **/*.cmi *.cmi

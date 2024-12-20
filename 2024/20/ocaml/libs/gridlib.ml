@@ -8,8 +8,8 @@ let mul_tpl (i, j) (h, k) = (i * h, j * k)
 
 let is_in_bounds size_i size_j cell =
   let ci, cj = cell in
-  let i = ci >= 0 && ci < size_i in
-  let j = cj >= 0 && cj < size_j in
+  let i = ci > 0 && ci < size_i - 1 in
+  let j = cj > 0 && cj < size_j - 1 in
   i && j
 
 let get_adj start =
