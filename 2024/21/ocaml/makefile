@@ -5,7 +5,7 @@ SRCS=$(wildcard libs/*.ml)
 .SILENT:
 run: all
 	./part1.out
-	# ./part2.out
+	./part2.out
 
 all: part1.out part2.out
 

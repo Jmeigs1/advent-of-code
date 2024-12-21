@@ -64,7 +64,6 @@ let cells_to_mvs (bi, bj) (si, sj) (ei, ej) =
   else col_first
 
 let line_to_moves mp line =
-  print_endline line;
   let chars = String.to_list line in
   let bad_cell = Map.find_exn mp '_' in
   let _, output =
@@ -96,6 +95,5 @@ let () =
     a + (len * get_number_prefix s)
   in
 
-  (* let _ = do_map 0 "456A" in *)
   List.fold_left lines ~init:0 ~f:do_map |> printf "%d\n";
   ()
