@@ -7,11 +7,9 @@ let get_nums = Re.(alt [ rg '0' '9' ] |> rep1 |> compile)
 let get_next sn =
   let mix sn n = n lxor sn in
   let prune n = n mod 16777216 in
+  let do_step num denom i = i * num / denom |> mix i |> prune in
 
-  let p1 = sn * 64 |> mix sn |> prune in
-  let p2 = p1 / 32 |> mix p1 |> prune in
-  let p3 = p2 * 2048 |> mix p2 |> prune in
-  p3
+  sn |> do_step 64 1 |> do_step 1 32 |> do_step 2048 1
 
 let make_list_of_n fn limit (start : int) =
   let rec get_nth i v out =
