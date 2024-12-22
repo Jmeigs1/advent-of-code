@@ -27,7 +27,12 @@ let lst_to_4_change_map lst =
   let rec loop lst mp =
     match lst with
       | h1 :: (h2 :: h3 :: h4 :: h5 :: rest as tail) ->
-          let key = (h1 - h2, h2 - h3, h3 - h4, h4 - h5) in
+          let key =
+            ((h1 - h2 + 10) * 20 * 20 * 20)
+            + ((h2 - h3 + 10) * 20 * 20)
+            + ((h3 - h4 + 10) * 20)
+            + h4 - h5 + 10
+          in
           let new_mp = Map.set mp ~key ~data:h5 in
           loop tail new_mp
       | _ -> mp
@@ -60,9 +65,8 @@ let () =
   in
 
   let key, max_value =
-    Map.fold mp
-      ~init:((0, 0, 0, 0), Int.min_value)
-      ~f:(fun ~key ~data (k, v) -> if data > v then (key, data) else (k, v))
+    Map.fold mp ~init:(0, Int.min_value) ~f:(fun ~key ~data (k, v) ->
+        if data > v then (key, data) else (k, v))
   in
 
   (* let k1, k2, k3, k4 = key in *)
