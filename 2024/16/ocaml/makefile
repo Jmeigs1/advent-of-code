@@ -1,27 +1,23 @@
 LIBS = str,stdio,re,core
 
-SRCS=$(wildcard *.ml)
-OBJS=$(SRCS:.c=.out)
+SRCS=$(wildcard libs/*.ml)
 
 .SILENT:
 run: all
 	./part1.out
 	# ./part2.out
 
-all: part1 part2
+all: part1.out part2.out
 
-part1: part1.out
+part1.out: $(SRCS) part1.ml
+	ocamlfind ocamlopt -linkpkg -package $(LIBS) -o $@ -I libs $^
 
-part1.out: part1.ml
-	ocamlfind ocamlc -linkpkg -package $(LIBS) -o $@ $^
-
-part2: part2.out
-
-part2.out: part2.ml
-	ocamlfind ocamlc -linkpkg -package $(LIBS) -o $@ $^
+part2.out: $(SRCS) part2.ml
+	ocamlfind ocamlopt -linkpkg -package $(LIBS) -o $@ -I libs $^
 
 clean:
-	rm -f *.cmi
-	rm -f *.cmo
-	rm -f *.cmx
-	rm -f *.out
+	rm -f **/*.cmi *.cmi
+	rm -f **/*.cmo *.cmo
+	rm -f **/*.cmx *.cmx
+	rm -f **/*.out *.out
+	rm -f **/*.o *.o

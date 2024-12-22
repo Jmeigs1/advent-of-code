@@ -6,21 +6,22 @@ type cell = int * int
 let add_tpl (i, j) (h, k) = (i + h, j + k)
 let mul_tpl (i, j) (h, k) = (i * h, j * k)
 let abs_diff_tpl (i, j) (h, k) = Int.abs (i - h) + Int.abs (j - k)
+let print_cell lbl (i, j) = Printf.printf "%s - %d:%d\n%!" lbl i j
 
 (* --- dirs --- *)
 let dirs = [| (0, 1); (-1, 0); (0, -1); (1, 0) |]
 let get_next_dir i = i + (1 % 4)
 
-let dirs_to_moves i cost =
+let dirs_to_moves start i cost =
   [
-    (1 + cost, i, dirs.(i));
-    (1000 + cost, (i - 1) % 4, dirs.((i - 1) % 4));
-    (1000 + cost, (i + 1) % 4, dirs.((i + 1) % 4));
-    (2000 + cost, (i + 2) % 4, dirs.((i + 2) % 4));
+    (1 + cost, i, add_tpl start dirs.(i));
+    (1000 + cost, (i - 1) % 4, start);
+    (1000 + cost, (i + 1) % 4, start);
+    (2000 + cost, (i + 2) % 4, start);
   ]
 
 let map_from_grid lst =
-  let start_mp = Map.Poly.empty in
+  let start_set = Set.Poly.empty in
   let start_point = ref (0, 0) in
   let end_point = ref (0, 0) in
 
@@ -29,7 +30,7 @@ let map_from_grid lst =
     else
       match line.[j] with
         | '#' ->
-            let new_mp = Map.set mp ~key:(i, j) ~data:'#' in
+            let new_mp = Set.add mp (i, j) in
             process_line new_mp line i (j + 1)
         | 'S' ->
             start_point := (i, j);
@@ -48,27 +49,62 @@ let map_from_grid lst =
           feed_line new_mp (i + 1) t
   in
 
-  feed_line start_mp 0 lst
+  feed_line start_set 0 lst
 
-let traverse mp start_dir start_point end_point =
-  let rec traverse cost seen dir start =
-    if Poly.equal start end_point then (cost, seen)
-    else
-      let moves = dirs_to_moves dir cost in
-      let open_moves =
-        moves
-        |> List.map ~f:(fun (c, dir, v) -> (c, dir, add_tpl v start))
-        |> List.filter ~f:(fun (c, dir, s) ->
-               let v = Map.find mp s in
-               Option.is_some v && not (Char.equal (Option.value_exn v) '#'))
-        |> List.filter ~f:(fun (c, dir, s) -> not (Set.mem seen s))
-      in
-      (cost, seen)
+let find_min opts =
+  let min =
+    Map.fold ~init:None
+      ~f:(fun ~key ~data a ->
+        if Option.is_none a then Some (key, data)
+        else
+          let ((a_loc, a_dir) as a_key), (a_cost as a_data) =
+            Option.value_exn a
+          in
+          let cost = data in
+          if a_cost > cost then Some (key, data) else Some (a_key, a_data))
+      opts
   in
-  traverse 0 Set.Poly.empty start_dir start_point
+  match min with
+    | None -> failwith "bad find_min"
+    | Some v -> v
+
+let traverse (start : cell) start_cost finish blocks =
+  let seen = Set.Poly.empty in
+  let options = Map.Poly.empty |> Map.set ~key:(start, 0) ~data:start_cost in
+
+  let rec traverse seen options =
+    match Map.is_empty options with
+      | true -> failwith "ran out of options in traverse"
+      | false ->
+          let (current_cell, current_dir), current_cost = find_min options in
+          if Poly.equal current_cell finish then (current_cost, 0)
+          else
+            let n_options = Map.remove options (current_cell, current_dir) in
+            let n_seen = Set.add seen (current_cell, current_dir) in
+
+            let adj =
+              dirs_to_moves current_cell current_dir current_cost
+              |> List.filter ~f:(fun (cost, dir, loc) ->
+                     not (Set.mem blocks loc || Set.mem n_seen (loc, dir)))
+            in
+
+            let n_options =
+              List.fold_left adj ~init:n_options ~f:(fun a (cost, dir, cell) ->
+                  if not (Map.mem a (cell, dir)) then
+                    Map.set a ~key:(cell, dir) ~data:cost
+                  else
+                    let old_cost = Map.find_exn a (cell, dir) in
+                    match cost < old_cost with
+                      | true -> Map.set a ~key:(cell, dir) ~data:cost
+                      | false -> a)
+            in
+
+            traverse n_seen n_options
+  in
+  traverse seen options
 
 let () =
-  let default = "input2.txt" in
+  let default = "input.txt" in
   let args = Sys.get_argv () in
   let file = if Int.equal (Array.length args) 2 then args.(1) else default in
 
@@ -76,8 +112,8 @@ let () =
   let lines = s |> String.strip |> String.split_lines in
 
   let start_dir = 0 in
-  let start_point, end_point, mp = map_from_grid lines in
+  let start_point, end_point, blocks = map_from_grid lines in
 
-  let low_score, _ = traverse mp start_dir start_point end_point in
-
-  printf "score: %d\n" low_score
+  let low_score, _ = traverse start_point start_dir end_point blocks in
+  printf "%d\n" low_score;
+  ()

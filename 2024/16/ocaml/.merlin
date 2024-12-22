@@ -1,1 +1,5 @@
+REC
+S .
+S libs
+B libs
 PKG str re stdio core
