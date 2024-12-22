@@ -33,7 +33,12 @@ let lst_to_4_change_map lst =
             + ((h3 - h4 + 10) * 20)
             + h4 - h5 + 10
           in
-          let new_mp = Map.set mp ~key ~data:h5 in
+          let new_mp = Map.add mp ~key ~data:h5 in
+          let new_mp =
+            match new_mp with
+              | `Duplicate -> mp
+              | `Ok mp -> mp
+          in
           loop tail new_mp
       | _ -> mp
   in
