@@ -22,9 +22,9 @@ let make_list_of_n fn limit (start : int) =
   in
   get_nth 0 start []
 
-let lst_to_4_change_map lst =
-  let mp = Map.Poly.empty in
-  let rec loop lst mp =
+let lst_to_4_change_map mp lst =
+  let seen = Set.Poly.empty in
+  let rec loop lst mp seen =
     match lst with
       | h1 :: (h2 :: h3 :: h4 :: h5 :: rest as tail) ->
           let key =
@@ -33,16 +33,19 @@ let lst_to_4_change_map lst =
             + ((h3 - h4 + 10) * 20)
             + h4 - h5 + 10
           in
-          let new_mp = Map.add mp ~key ~data:h5 in
-          let new_mp =
-            match new_mp with
-              | `Duplicate -> mp
-              | `Ok mp -> mp
-          in
-          loop tail new_mp
+          if Set.mem seen key then loop tail mp seen
+          else
+            let n_seen = Set.add seen key in
+            let old_val = Map.find mp key in
+            let new_mp =
+              match old_val with
+                | None -> Map.set mp ~key ~data:h5
+                | Some v -> Map.set mp ~key ~data:(h5 + v)
+            in
+            loop tail new_mp n_seen
       | _ -> mp
   in
-  loop lst mp
+  loop lst mp seen
 
 let () =
   let default = "input.txt" in
@@ -54,19 +57,10 @@ let () =
     s |> String.strip |> String.split_lines |> List.map ~f:Int.of_string
   in
 
-  let lists =
+  let mp =
     lines
     |> List.map ~f:(make_list_of_n get_next 2000)
-    |> List.map ~f:lst_to_4_change_map
-  in
-
-  let mp =
-    List.fold_left lists ~init:Map.Poly.empty ~f:(fun a_mp v_mp ->
-        Map.merge a_mp v_mp ~f:(fun ~key data ->
-            match data with
-              | `Left value -> Some value
-              | `Right value -> Some value
-              | `Both (v1, v2) -> Some (v1 + v2)))
+    |> List.fold_left ~init:Map.Poly.empty ~f:lst_to_4_change_map
   in
 
   let key, max_value =
