@@ -48,22 +48,17 @@ let build_choose_3 mp start_key =
   |> List.fold_left ~init:Set.Poly.empty ~f:(fun acc (a, b) ->
          Set.add acc (List.sort ~compare:String.compare [ start_key; a; b ]))
 
-let can_add_key mp k combo =
-  Set.find combo ~f:(fun cv -> Set.mem (Map.find_exn mp cv) k |> not)
-  |> function
-  | Some _ -> false
-  | None -> true
-
 let add_next_keys mp keys combo =
-  Set.fold keys ~init:Set.Poly.empty ~f:(fun acc key ->
-      let combo_set = Set.Poly.of_list combo in
-      match Set.mem combo_set key with
-        | true -> acc
-        | false ->
-        match can_add_key mp key combo_set with
-          | false -> acc
-          | true ->
-              Set.add acc (List.sort ~compare:String.compare (key :: combo)))
+  let not_in_map cv k = Set.mem (Map.find_exn mp cv) k |> not in
+  let cand_keys =
+    Set.filter keys ~f:(fun k ->
+        List.find combo ~f:(fun c -> not_in_map c k) |> function
+        | Some _ -> false
+        | None -> true)
+  in
+
+  Set.fold cand_keys ~init:Set.Poly.empty ~f:(fun acc key ->
+      Set.add acc (List.sort ~compare:String.compare (key :: combo)))
 
 let rec find_biggest mp keys combos i =
   printf "testing grid size: %d\n%!" i;
