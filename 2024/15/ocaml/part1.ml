@@ -167,11 +167,6 @@ let () =
 
   let mp = feed_moves mp start_robot moves in
 
-  let boundi = List.length grid in
-  let boundj = String.length (List.nth_exn grid 0) in
-
-  Map.to_alist mp |> print_grid boundi boundj;
-
   let count =
     Map.to_alist mp
     |> List.fold_left

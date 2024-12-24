@@ -1,6 +1,10 @@
 open Core
 open Re
 
+(* change this to animate *)
+let visualize = true
+
+(* -- -- *)
 let split_parts s = s |> Str.split (Str.regexp "\n\n")
 let to_char_list s = List.init (String.length s) ~f:(String.get s)
 
@@ -53,6 +57,12 @@ let print_grid boundi boundj robot lst =
       | [] -> ()
   in
 
+  let clear_screen () =
+    print_string "\027[2J";
+    print_string "\027[H";
+    ()
+  in
+
   let ri, rj = robot in
 
   arr.(ri) <- replace_char arr.(ri) rj '@';
@@ -60,11 +70,13 @@ let print_grid boundi boundj robot lst =
   let rec print_loop n =
     if Int.equal n (Array.length arr) then ()
     else
-      let () = printf "%s\n" arr.(n) in
+      let () = printf "%s\n%!" arr.(n) in
       print_loop (n + 1)
   in
   add_points lst;
-  print_loop 0
+  print_loop 0;
+  clear_screen ();
+  ()
 
 let map_from_grid lst =
   let start_mp = Map.empty (module String) in
@@ -238,7 +250,11 @@ let rec feed_moves pg mp start mvs =
     | mv :: rest ->
         (* printf "move: %c\n%!" mv; *)
         let new_mp, new_start = do_move mp start mv in
-        (* let () = pg new_start (Map.to_alist new_mp) in *)
+        let () =
+          match visualize with
+            | true -> pg new_start (Map.to_alist new_mp)
+            | false -> ()
+        in
         feed_moves pg new_mp new_start rest
 
 let () =
