@@ -6,3 +6,6 @@
 # ocaml
 *.out
 *.cm[a-zA-z]
+
+# python
+.venv
