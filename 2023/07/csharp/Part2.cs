@@ -39,25 +39,25 @@ public class Hand : IComparable<Hand>
     {
         if (other == null) return 1;
 
+        // General case
         if (_cards.Length != other._cards.Length)
         {
-            return _cards.Length < other._cards.Length ? 1 : -1;
+            return other._cards.Length - _cards.Length;
         }
 
+        // Full house vs 4 of a kind Test
         if (_cards[0].Item2 + _jokers != other._cards[0].Item2 + other._jokers)
         {
             return _cards[0].Item2 + _jokers - (other._cards[0].Item2 + other._jokers);
         }
 
+        // Tiebreaker
         for (int i = 0; i < _originalCards.Length; i++)
         {
-            if (_originalCards[i] > other._originalCards[i])
+            var diff = _originalCards[i] - other._originalCards[i];
+            if (diff != 0)
             {
-                return 1;
-            }
-            else if (_originalCards[i] < other._originalCards[i])
-            {
-                return -1;
+                return diff;
             }
         }
 
@@ -166,7 +166,7 @@ class Runner
             var round = rounds[i];
             var bid = round.Bid;
             score += (i + 1) * bid;
-            System.Console.WriteLine($"{i + 1} {round.Hand.ToString()} {bid} {score}");
+            // System.Console.WriteLine($"{i + 1} {round.Hand.ToString()} {bid} {score}");
         }
 
         System.Console.WriteLine($"Score: {score}");
