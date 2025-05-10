@@ -3,4 +3,4 @@ run:
 exec:
 	@./fsharp
 build:
-	@dotnet publish -o .
+	@dotnet publish -o build
