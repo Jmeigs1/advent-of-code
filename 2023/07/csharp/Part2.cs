@@ -46,7 +46,7 @@ public class Hand : IComparable<Hand>
 
         if (_cards[0].Item2 + _jokers != other._cards[0].Item2 + other._jokers)
         {
-            return _cards[0].Item2 + _jokers - other._cards[0].Item2 + other._jokers;
+            return _cards[0].Item2 + _jokers - (other._cards[0].Item2 + other._jokers);
         }
 
         for (int i = 0; i < _originalCards.Length; i++)
